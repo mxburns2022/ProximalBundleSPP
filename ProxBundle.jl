@@ -263,7 +263,7 @@ function bundle_saddle_point(game::BilinearSPP, target_accuracy::Float64; memory
     M = max(Mx, My)
 
     # Use dynamic stepsize sequence
-    λ₁ = 1 / 4M
+    λ₁ = 1 / 2M
     # Allocate storage for proximal subproblems
     proxgame = ProximalBilinearSPP(game=game, stepsize=λ₁)
 

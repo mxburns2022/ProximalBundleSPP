@@ -135,7 +135,7 @@ function subgradient_method(game::BilinearSPP, target_accuracy::Float64; log_fre
 
     # Set the initial stepsize
     h₁ = if dynamic_stepsize
-        1 / (32 * M^2)
+        1 / (2 * M)
     else
         target_accuracy / (32 * M^2)
     end
