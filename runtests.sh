@@ -1,5 +1,4 @@
 julia RunTests.jl --n 100 --m 100 --epsilon 1e-4 --penalty_x 5e-2 --penalty_y 5e-2 --solver subgradient --numcuts 1 --frequency 10000 --seed 2 > data/subg_static_n_100_m_100_eps_1en4_5en2_2.csv
-julia RunTests.jl --n 100 --m 100 --epsilon 1e-4 --penalty_x 5e-2 --penalty_y 5e-2 --solver subgradient --numcuts 1 --frequency 10000 --seed 2 --dynamic-stepsize > data/subg_dynamic_n_100_m_100_eps_1en4_5en2_2.csv
 julia RunTests.jl --n 100 --m 100 --epsilon 1e-4 --penalty_x 5e-2 --penalty_y 5e-2 --solver bundle --numcuts 1 --frequency 10 --seed 2 > data/1cut_n_100_m_100_eps_1en4_5en2_2.csv
 julia RunTests.jl --n 100 --m 100 --epsilon 1e-4 --penalty_x 5e-2 --penalty_y 5e-2 --solver bundle --numcuts 2 --frequency 10 --seed 2 > data/2cut_n_100_m_100_eps_1en4_5en2_2.csv
 julia RunTests.jl --n 100 --m 100 --epsilon 1e-4 --penalty_x 5e-2 --penalty_y 5e-2 --solver bundle --numcuts 20 --frequency 10 --seed 2 > data/20cut_n_100_m_100_eps_1en4_5en2_2.csv

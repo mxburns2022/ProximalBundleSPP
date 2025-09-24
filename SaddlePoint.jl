@@ -134,11 +134,8 @@ function subgradient_method(game::BilinearSPP, target_accuracy::Float64; log_fre
     niter = convert(Int, ceil(128 * M^2 * 1 / (target_accuracy^2)))
 
     # Set the initial stepsize
-    h₁ = if dynamic_stepsize
-        1 / (2 * M)
-    else
-        target_accuracy / (32 * M^2)
-    end
+    hₖ = target_accuracy / (32 * M^2)
+
 
     # Allocate space for the ergodic averages
     x̄ = copy(x)
@@ -149,11 +146,6 @@ function subgradient_method(game::BilinearSPP, target_accuracy::Float64; log_fre
     Tk = 0.0
     for k in 1:niter
         # Set the stepsize for this iteration
-        hₖ = if dynamic_stepsize
-            h₁ / sqrt(k)
-        else
-            h₁
-        end
         Tk += hₖ
         # Log step
         if (k - 1) % log_frequency == 0

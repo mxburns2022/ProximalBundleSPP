@@ -205,6 +205,7 @@ function PDCP!(game::ProximalBilinearSPP, ε::Float64, memory::Int=20)
     state.sₖ = [copy(state.sf_x)]
     nsteps = 0
     tj = 1.0
+    pdcp_steps = 0
 
     # While IPP condition not satisfied
     while tj > ε
@@ -243,6 +244,7 @@ function PDCP!(game::ProximalBilinearSPP, ε::Float64, memory::Int=20)
             push!(state.fₖ, ϕy - sf_y' * state.y)
             bundle_management!(state, memory)
         end
+        pdcp_steps += 1
     end
     # Copy back the final iterates
     if game.setting == :Min
@@ -252,7 +254,7 @@ function PDCP!(game::ProximalBilinearSPP, ε::Float64, memory::Int=20)
         copy!(game.y⁺, state.y)
         copy!(game.ỹ, state.x)
     end
-    return nsteps
+    return nsteps, pdcp_steps
 end
 
 # Implementation of PB-SPP
@@ -261,9 +263,9 @@ function bundle_saddle_point(game::BilinearSPP, target_accuracy::Float64; memory
     Mx = maximum([norm(game.A[i, :]) for i in 1:game.M]) + game.γx
     My = maximum([norm(game.A[:, i]) for i in 1:game.N]) + game.γy
     M = max(Mx, My)
-
+    D = 2
     # Use dynamic stepsize sequence
-    λ₁ = 1 / 2M
+    λ₁ = D / 4M
     # Allocate storage for proximal subproblems
     proxgame = ProximalBilinearSPP(game=game, stepsize=λ₁)
 
@@ -275,9 +277,10 @@ function bundle_saddle_point(game::BilinearSPP, target_accuracy::Float64; memory
     x̄ = zeros(game.N)
     ȳ = zeros(game.M)
     inner_steps = 0
+    pdcp_steps = 0
     starttime = time_ns()
     # data = []
-    println("elapsed_time(s),inner_steps,outer_steps,pd_gap")
+    println("elapsed_time(s),inner_steps,pdcp_iterations,outer_steps,pd_gap")
     for k in 1:300000
         proxgame.stepsize = λ₁ / sqrt(k)
         # Update the ergodic averages
@@ -286,7 +289,7 @@ function bundle_saddle_point(game::BilinearSPP, target_accuracy::Float64; memory
 
         # Log current iterate status
         if (k - 1) % log_frequency == 0
-            println(round((time_ns() - starttime) / 1e9, sigdigits=6), ",", inner_steps, ",", k, ",", primalv(game, x̄) - dualv(game, ȳ))
+            println(round((time_ns() - starttime) / 1e9, sigdigits=6), ",", inner_steps, ",", pdcp_steps, ",", k, ",", primalv(game, x̄) - dualv(game, ȳ))
             flush(stdout)
         end
         # If target_accuracy is reached, terminate
@@ -296,9 +299,13 @@ function bundle_saddle_point(game::BilinearSPP, target_accuracy::Float64; memory
 
         # Solve the proximal subproblems
         init_prox_step!(proxgame, :Min)
-        inner_steps += PDCP!(proxgame, target_accuracy / 4, memory)
+        inner_steps_i, pdcp_steps_i = PDCP!(proxgame, target_accuracy / 4, memory)
+        inner_steps += inner_steps_i
+        pdcp_steps += pdcp_steps_i
         init_prox_step!(proxgame, :Max)
-        inner_steps += PDCP!(proxgame, target_accuracy / 4, memory)
+        inner_steps_i, pdcp_steps_i = PDCP!(proxgame, target_accuracy / 4, memory)
+        inner_steps += inner_steps_i
+        pdcp_steps += pdcp_steps_i
 
         # Update the main iterates
         copy!(proxgame.x, proxgame.x⁺)
